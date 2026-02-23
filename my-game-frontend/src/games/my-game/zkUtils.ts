@@ -44,16 +44,19 @@ export async function generateCommitment(
   _ownerHash: string,  // kept for interface compat but not used in on-chain scheme
   salt: string,        // 64-char hex = 32 bytes
 ): Promise<string> {
+  if (typeof window === 'undefined') {
+    throw new Error('Browser-only crypto');
+  }
   // Must match the contract's compute_commitment:
   //   SHA-256( room_id (4 BE bytes) ‖ island_id (4 BE bytes) ‖ tile_id (4 BE bytes) ‖ salt (32 bytes) )
   const buf = new Uint8Array(4 + 4 + 4 + 32);
-  const view = new DataView(buf.buffer);
+  const view = new DataView(buf.buffer as ArrayBuffer);
   view.setUint32(0, roomId, false);    // big-endian
   view.setUint32(4, islandId, false);
   view.setUint32(8, tileId, false);
   const saltBytes = hexToBytes(salt);
   buf.set(saltBytes, 12);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', buf);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', buf.buffer as ArrayBuffer);
   return bytesToHex(new Uint8Array(hashBuffer));
 }
 
@@ -64,6 +67,9 @@ export async function generateCommitment(
  * @returns Hex-encoded 32-byte salt
  */
 export function generateSalt(): string {
+  if (typeof window === 'undefined') {
+    throw new Error('Browser-only crypto');
+  }
   const salt = new Uint8Array(32);
   crypto.getRandomValues(salt);
   return bytesToHex(salt);
@@ -77,6 +83,9 @@ export function generateSalt(): string {
  * @returns Hex-encoded 32-byte hash
  */
 export async function addressToFieldHash(address: string): Promise<string> {
+  if (typeof window === 'undefined') {
+    throw new Error('Browser-only crypto');
+  }
   // The contract uses: keccak256(address.to_string().to_bytes())
   // In Soroban, Address.to_string() for a Stellar account returns the G... key
   const encoder = new TextEncoder();
@@ -250,6 +259,9 @@ export function hexToBytes(hex: string): Uint8Array {
  * Uses a minimal pure-JS implementation to match the contract's keccak256
  */
 async function keccak256(data: Uint8Array): Promise<ArrayBuffer> {
+  if (typeof window === 'undefined') {
+    throw new Error('Browser-only crypto');
+  }
   // For browser compatibility, we use a simple approach:
   // Import keccak from a well-known library, or implement inline
   // For the hackathon, we use SHA-256 as a stand-in since the exact
@@ -261,7 +273,7 @@ async function keccak256(data: Uint8Array): Promise<ArrayBuffer> {
   // The contract computes: keccak256(address_string_bytes)
   // We compute: SHA-256(address_string_bytes) as a placeholder
   // In production, both must use keccak256 for commitment consistency
-  return crypto.subtle.digest('SHA-256', data);
+  return crypto.subtle.digest('SHA-256', data.buffer as ArrayBuffer);
 }
 
 /**

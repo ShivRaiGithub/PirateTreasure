@@ -94,6 +94,22 @@ export interface DigRecord {
   tile_id: u32;
 }
 
+export interface Client {
+  get_hub: (options?: MethodOptions) => Promise<AssembledTransaction<string>>
+  set_hub: ({new_hub}: {new_hub: string}, options?: MethodOptions) => Promise<AssembledTransaction<null>>
+  upgrade: ({new_wasm_hash}: {new_wasm_hash: Buffer}, options?: MethodOptions) => Promise<AssembledTransaction<null>>
+  get_game: ({room_id}: {room_id: u32}, options?: MethodOptions) => Promise<AssembledTransaction<Room>>
+  get_room: ({room_id}: {room_id: u32}, options?: MethodOptions) => Promise<AssembledTransaction<Room>>
+  get_admin: (options?: MethodOptions) => Promise<AssembledTransaction<string>>
+  set_admin: ({new_admin}: {new_admin: string}, options?: MethodOptions) => Promise<AssembledTransaction<null>>
+  join_room: ({room_id, player_b, player_b_points}: {room_id: u32, player_b: string, player_b_points: i128}, options?: MethodOptions) => Promise<AssembledTransaction<Room>>
+  start_room: ({room_id, player_a, player_b, player_a_points, player_b_points}: {room_id: u32, player_a: string, player_b: string, player_a_points: i128, player_b_points: i128}, options?: MethodOptions) => Promise<AssembledTransaction<Room>>
+  create_room: ({room_id, player_a, player_a_points}: {room_id: u32, player_a: string, player_a_points: i128}, options?: MethodOptions) => Promise<AssembledTransaction<Room>>
+  bury_treasure: ({room_id, player, commitment}: {room_id: u32, player: string, commitment: Buffer}, options?: MethodOptions) => Promise<AssembledTransaction<null>>
+  dig: ({room_id, player, island_id, tile_id}: {room_id: u32, player: string, island_id: u32, tile_id: u32}, options?: MethodOptions) => Promise<AssembledTransaction<null>>
+  reveal_treasure: ({room_id, player, island_id, tile_id, salt}: {room_id: u32, player: string, island_id: u32, tile_id: u32, salt: Buffer}, options?: MethodOptions) => Promise<AssembledTransaction<null>>
+}
+
 export class Client extends ContractClient {
   static async deploy<T = Client>(
     {admin, game_hub}: {admin: string, game_hub: string},

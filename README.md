@@ -28,8 +28,8 @@ Pirate's Treasure is a fair-by-design hidden-information game. Here is how it wo
 |---|---|
 | Smart Contracts | Soroban (Rust) on Stellar Testnet |
 | Game Framework | Stellar Game Studio |
-| Commitment Scheme | SHA-256 (protocol-native via `env.crypto().sha256`) |
-| ZK Circuit | Noir (`zk/treasure/`) — Poseidon2 commitment + Groth16 proof |
+| Commitment Scheme | SHA-256 (protocol-native via `env.crypto().sha256`) — enforced on-chain |
+| ZK Circuit (ready, not yet enforced) | Noir (`zk/treasure/`) — Poseidon2 commitment + Groth16/BN254 proof |
 | Frontend | React + Vite + TypeScript |
 | Wallets | Dev wallets (no browser extension required) |
 | Bindings | Auto-generated TypeScript clients via Stellar CLI |
@@ -110,9 +110,11 @@ The Pirate's Treasure contract (`contracts/my-game/`) manages the full game life
 
 All room and commitment data uses **temporary storage** with a 30-day TTL, extended on every write. Instance storage (admin, hub address) uses the same TTL pattern.
 
-### ZK Circuit
+### ZK Circuit (ready — not yet enforced on-chain)
 
-A Noir circuit lives in `zk/treasure/`. It proves knowledge of a treasure's location — `Poseidon2(room_id, island_id, tile_id, owner_hash, salt) == commitment` — without disclosing the location itself. The circuit uses BN254 and is compiled for Groth16. This layer strengthens the cryptographic guarantees beyond the on-chain SHA-256 scheme.
+A Noir circuit lives in `zk/treasure/`. It mirrors the game's reveal logic and proves knowledge of a valid treasure location — `Poseidon2(room_id, island_id, tile_id, owner_hash, salt) == commitment` — without disclosing the secret. The circuit targets BN254/Groth16, includes range and ownership constraints, and passes its own Nargo test suite.
+
+**Current status:** The on-chain game enforces commitments and reveals using SHA-256 (`env.crypto().sha256`). The Noir circuit is included to demonstrate how the system can evolve into full zero-knowledge verification once Stellar's BN254 host functions are available for on-chain proof verification. SNARK proof generation and on-chain verification are intentionally out-of-scope for this prototype; the circuit exists as a tested, architecturally compatible extension path.
 
 ---
 
@@ -154,10 +156,19 @@ bun run dev:game my-game         # Run the standalone frontend with wallet switc
 
 Pirate's Treasure was built for the **ZK Gaming on Stellar** hackathon track. The game demonstrates:
 
-- **Protocol-level cryptography** — commitments are verified using Stellar's native `env.crypto().sha256` — no external libraries or oracles needed.
-- **Fair hidden information** — the commitment-reveal pattern enforces honest gameplay at the contract level. Neither player can change their treasure location after committing.
-- **ZK-ready architecture** — the `zk/treasure/` Noir circuit extends the commitment scheme with full zero-knowledge proofs (Poseidon2 hash, Groth16, BN254), enabling provable reveals without disclosing the secret until the moment of victory.
+### Enforced today
+
+- **Protocol-level cryptography** — treasure commitments are created and verified using Stellar's native `env.crypto().sha256` directly in the Soroban contract. No external libraries or oracles are needed.
+- **Fair hidden information** — the commit–reveal pattern enforces honest gameplay at the contract level. Neither player can change their treasure location after committing, and the contract rejects any reveal whose hash does not match the stored commitment.
+- **Trustless winner determination** — the contract verifies the pre-image, calls `GameHub::end_game`, and records the winner on-chain before any local state is written. No server or referee is involved.
+- **Fog-of-war** — the frontend only renders a player's own dig history. Opponent digs and treasure locations are never exposed to the client.
 - **Stellar Game Hub integration** — lifecycle events (`start_game`, `end_game`) are reported to the shared hub contract as required by the hackathon framework. The deployment script hard-pins the official testnet hub address `CB4VZAT2U3UC6XFK3N23SKRF2NDCMP3QHJYMCHHFMZO7MRQO6DQ2EMYG` and passes it to the contract constructor; every `start_room` and `reveal_treasure` call invokes that contract on-chain.
+
+### ZK-ready architecture (circuit tested, not yet enforced on-chain)
+
+- **Noir circuit** — `zk/treasure/` contains a complete Noir circuit that proves knowledge of a valid treasure location using Poseidon2, BN254, and Groth16. The circuit includes range checks, anti-self-reveal constraints, and a full Nargo test suite.
+- **Designed for Stellar's ZK primitives** — the commitment scheme and proof format are compatible with Stellar's new cryptographic host functions (BN254 pairing, Poseidon2). Once on-chain proof verification is available, the existing SHA-256 reveal can be upgraded to require a SNARK proof with no changes to the game's architecture.
+- **Intentional scope boundary** — full SNARK proof generation and on-chain verification are out-of-scope for this prototype. The circuit is included to show the clear upgrade path from trustless commit–reveal to full zero-knowledge verification.
 
 ---
 

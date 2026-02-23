@@ -4,6 +4,8 @@ A 2-player hidden-information treasure hunt game built on Stellar with Soroban s
 
 Built on [Stellar Game Studio](https://jamesbachini.github.io/Stellar-Game-Studio/) — a toolkit for shipping on-chain two-player games quickly on Stellar.
 
+NOTE: You can play the game on the deployed site. However, since 2 particular wallets are being used, if someone else starts the game on their browser, then your ongoing match in your browser might stop working.
+
 ---
 
 ## Gameplay Overview

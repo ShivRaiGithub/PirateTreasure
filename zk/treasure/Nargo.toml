@@ -1,0 +1,8 @@
+[package]
+name = "treasure"
+type = "bin"
+authors = ["Stellar Game Studio"]
+compiler_version = ">=1.0.0"
+expression_width = 4
+
+[dependencies]

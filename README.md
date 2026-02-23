@@ -42,6 +42,9 @@ Pirate's Treasure is a fair-by-design hidden-information game. Here is how it wo
 - [Rust](https://rustup.rs/) with the `wasm32v1-none` target
 - [Stellar CLI](https://developers.stellar.org/docs/tools/developer-tools/stellar-cli)
 
+### ENV
+Create .env file from .env.example and fill the required variables
+
 ### Install and run
 
 ```bash

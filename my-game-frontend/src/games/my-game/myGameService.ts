@@ -10,7 +10,7 @@ import { hexToBytes } from './zkUtils';
 type ClientOptions = contract.ClientOptions;
 
 /**
- * Service for interacting with the ZK Treasure Hunt contract.
+ * Service for interacting with the Pirate's Treasure contract.
  *
  * Game flow: create_room → join_room → start_room → bury_treasure (×2) → dig/reveal_treasure
  *
@@ -424,7 +424,7 @@ export class MyGameService {
   // Game-play calls (single-sig)
   // ========================================================================
 
-  /** Bury treasure: submit a Poseidon2 commitment */
+  /** Bury treasure: submit a SHA-256 commitment */
   async buryTreasure(
     roomId: number,
     playerAddress: string,
